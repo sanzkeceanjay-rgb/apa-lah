@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotspot Monitor - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>📡 Hotspot Pro</h2>
+            <span class="sidebar-version">v2.0</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="dashboard">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+            <a href="#" class="nav-item" data-page="devices">
+                <span class="material-icons">devices</span> Perangkat
+            </a>
+            <a href="#" class="nav-item" data-page="logs">
+                <span class="material-icons">history</span> Logs
+            </a>
+            <a href="#" class="nav-item" data-page="settings">
+                <span class="material-icons">settings</span> Pengaturan
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <span class="material-icons">account_circle</span>
+                <span id="adminName">Admin</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="logout()">
+                <span class="material-icons">logout</span> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <span class="material-icons">menu</span>
+            </button>
+            <h1 id="pageTitle">Dashboard</h1>
+            <div class="top-bar-right">
+                <span class="status-dot online" id="connectionStatus"></span>
+                <span id="lastUpdate">Last update: -</span>
+                <button class="btn btn-primary btn-sm" onclick="manualScan()">
+                    <span class="material-icons">refresh</span> Scan
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page active">
+            <!-- Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon">📱</div>
+                    <div>
+                        <div class="stat-number" id="totalDevices">0</div>
+                        <div class="stat-label">Total Devices</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🟢</div>
+                    <div>
+                        <div class="stat-number" id="onlineDevices">0</div>
+                        <div class="stat-label">Online</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔴</div>
+                    <div>
+                        <div class="stat-number" id="offlineDevices">0</div>
+                        <div class="stat-label">Offline</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div>
+                        <div class="stat-number" id="totalData">0 GB</div>
+                        <div class="stat-label">Total Data</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div>
+                        <div class="stat-number" id="avgUptime">0m</div>
+                        <div class="stat-label">Avg Uptime</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div>
+                        <div class="stat-number" id="avgData">0 MB</div>
+                        <div class="stat-label">Avg per Device</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="card">
+                    <h2>
+                        <span class="material-icons">bar_chart</span> 
+                        Top 5 Pengguna Data
+                    </h2>
+                    <div id="topUsersChart"></div>
+                </div>
+                <div class="card">
+                    <h2>
+                        <span class="material-icons">donut_large</span> 
+                        Status Devices
+                    </h2>
+                    <div id="statusDonut"></div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <h2>
+                    <span class="material-icons">access_time</span> 
+                    Recent Activity
+                </h2>
+                <div id="recentActivity"></div>
+            </div>
+        </div>
+
+        <!-- Devices Page -->
+        <div id="page-devices" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <span class="material-icons">devices</span> 
+                        Daftar Perangkat
+                    </h2>
+                    <div class="card-actions">
+                        <div class="search-box">
+                            <input type="text" id="deviceSearch" placeholder="Cari..." oninput="filterDevices()">
+                            <select id="statusFilter" onchange="filterDevices()">
+                                <option value="all">Semua</option>
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="exportData()">
+                            <span class="material-icons">download</span> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>IP Address</th>
+                                <th>Hostname</th>
+                                <th>Vendor</th>
+                                <th>Status</th>
+                                <th>Data Used</th>
+                                <th>Limit</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devicesTableBody">
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <span class="material-icons">devices_off</span>
+                                    Tidak ada perangkat
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div id="page-logs" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <span class="material-icons">history</span> 
+                        Log Aktivitas
+                    </h2>
+                    <div class="card-actions">
+                        <select id="logFilter" onchange="filterLogs()">
+                            <option value="all">Semua</option>
+                            <option value="connection">Koneksi</option>
+                            <option value="data">Data</option>
+                            <option value="system">Sistem</option>
+                            <option value="warning">Warning</option>
+                        </select>
+                        <button class="btn btn-danger btn-sm" onclick="clearLogs()">
+                            <span class="material-icons">delete</span> Clear
+                        </button>
+                    </div>
+                </div>
+                <div id="logsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page">
+            <div class="card">
+                <h2>
+                    <span class="material-icons">settings</span> 
+                    Pengaturan
+                </h2>
+                
+                <div class="settings-section">
+                    <h3>🔍 Scan Settings</h3>
+                    <div class="settings-row">
+                        <label>
+                            <input type="checkbox" id="autoScan" onchange="saveSettings()">
+                            Auto Scan
+                        </label>
+                        <div class="settings-group">
+                            <label>Interval (detik)</label>
+                            <input type="number" id="scanInterval" min="10" max="300" onchange="saveSettings()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>📊 Data Settings</h3>
+                    <div class="settings-row">
+                        <div class="settings-group">
+                            <label>Default Data Limit (GB)</label>
+                            <input type="number" id="defaultLimit" min="1" max="100" onchange="saveSettings()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🔔 Notifications</h3>
+                    <div class="settings-row">
+                        <label>
+                            <input type="checkbox" id="notifyConnect" onchange="saveSettings()">
+                            Notifikasi Connect
+                        </label>
+                        <label>
+                            <input type="checkbox" id="notifyDisconnect" onchange="saveSettings()">
+                            Notifikasi Disconnect
+                        </label>
+                        <label>
+                            <input type="checkbox" id="notifyLimit" onchange="saveSettings()">
+                            Notifikasi Batas Data
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🔐 Security</h3>
+                    <div class="settings-row">
+                        <div class="settings-group">
+                            <label>Ubah Password</label>
+                            <input type="password" id="oldPassword" placeholder="Password Lama">
+                            <input type="password" id="newPassword" placeholder="Password Baru">
+                            <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>💾 Data Management</h3>
+                    <div class="settings-row">
+                        <button class="btn btn-success" onclick="exportData()">📤 Export All Data</button>
+                        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Device Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Edit Device</h3>
+                <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Hostname</label>
+                <input type="text" id="editHostname">
+            </div>
+            <div class="form-group">
+                <label>Data Limit (GB)</label>
+                <input type="number" id="editLimit" min="1" max="100">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" id="editNotes" placeholder="Catatan...">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" onclick="saveEdit()">Simpan</button>
+                <button class="btn btn-secondary" onclick="closeModal('editModal')">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
